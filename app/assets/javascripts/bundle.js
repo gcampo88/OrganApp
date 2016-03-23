@@ -46,16 +46,13 @@
 
 	var React = __webpack_require__(30);
 	var ReactDOM = __webpack_require__(186);
-	var Dispatcher = __webpack_require__(1);
-	var TONES_CONSTANTS = __webpack_require__(7);
-	var Note = __webpack_require__(6);
 	var KeyListener = __webpack_require__(8);
-	var Key = __webpack_require__(11);
+	var Organ = __webpack_require__(187);
 	
 	KeyListener.bindEvents();
 	
 	$(document).ready(function () {
-	  ReactDOM.render(React.createElement(Key, { noteName: 'C' }), document.getElementById("content"));
+	  ReactDOM.render(React.createElement(Organ, null), document.getElementById("content"));
 	});
 
 /***/ },
@@ -544,8 +541,8 @@
 	
 	  keydown: function () {
 	    $(document).keydown(function (event) {
-	      var key = Mapping[event.which];
-	      if (key === undefined) {
+	      var key = Mapping[event.keyCode];
+	      if (!key) {
 	        return;
 	      }
 	      KeyActions.keyPressed(key);
@@ -554,7 +551,7 @@
 	
 	  keyup: function () {
 	    $(document).keyup(function (event) {
-	      var key = Mapping[event.which];
+	      var key = Mapping[event.keyCode];
 	      if (key === undefined) {
 	        return;
 	      }
@@ -582,6 +579,16 @@
 	  53: "ASHARP",
 	  66: "B"
 	};
+	//
+	// var Mapping = {
+	//   65: "A",
+	//   83: "B",
+	//   68: "C",
+	//   70: "D",
+	//   74: "E",
+	//   75: "F"
+	//
+	// };
 	
 	module.exports = KeyListener;
 
@@ -634,11 +641,14 @@
 	var React = __webpack_require__(30);
 	var ReactDOM = __webpack_require__(186);
 	var TONES_CONSTANTS = __webpack_require__(7);
-	Note = __webpack_require__(6);
+	var Note = __webpack_require__(6);
 	
 	var Key = React.createClass({
 	  displayName: 'Key',
 	
+	  getInitialState: function () {
+	    return { pressed: "" };
+	  },
 	
 	  componentDidMount: function () {
 	    var note = new Note(TONES_CONSTANTS[this.props.noteName]);
@@ -648,8 +658,10 @@
 	    this.keyToken = KeyStore.addListener(function () {
 	      if (KeyStore.all().includes(that.props.noteName)) {
 	        that.note.start();
+	        that.setState({ pressed: " pressed" });
 	      } else {
 	        that.note.stop();
+	        that.setState({ pressed: "" });
 	      }
 	    });
 	  },
@@ -659,9 +671,12 @@
 	  },
 	
 	  render: function () {
+	    var className = this.props.noteName.length > 1 ? "sharp" : "regular";
+	    className += this.state.pressed;
+	
 	    return React.createElement(
 	      'div',
-	      null,
+	      { className: className },
 	      this.props.noteName
 	    );
 	  }
@@ -690,6 +705,7 @@
 	  switch (payload.actionType) {
 	    case NoteConstants.keyPressed:
 	      if (!_currentKeys.includes(payload.noteName)) {
+	        // debugger;
 	        _currentKeys.push(payload.noteName);
 	        this.__emitChange();
 	      }
@@ -26654,6 +26670,158 @@
 	
 	module.exports = __webpack_require__(32);
 
+
+/***/ },
+/* 187 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var KeyStore = __webpack_require__(12);
+	var React = __webpack_require__(30);
+	var ReactDOM = __webpack_require__(186);
+	var TONES_CONSTANTS = __webpack_require__(7);
+	var Key = __webpack_require__(11);
+	var Recorder = __webpack_require__(188);
+	
+	var Organ = React.createClass({
+	  displayName: 'Organ',
+	
+	
+	  render: function () {
+	    var keys = Object.keys(TONES_CONSTANTS).map(function (key, i) {
+	      return React.createElement(Key, { noteName: key, key: i });
+	    });
+	
+	    return React.createElement(
+	      'section',
+	      null,
+	      keys,
+	      React.createElement(
+	        'h1',
+	        null,
+	        'Record a Track!'
+	      ),
+	      React.createElement(Recorder, null)
+	    );
+	  }
+	});
+	
+	module.exports = Organ;
+
+/***/ },
+/* 188 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var React = __webpack_require__(30);
+	var ReactDOM = __webpack_require__(186);
+	var KeyStore = __webpack_require__(12);
+	var Track = __webpack_require__(189);
+	
+	var Recorder = React.createClass({
+	  displayName: 'Recorder',
+	
+	  getInitialState: function () {
+	    return {
+	      isRecording: false,
+	      track: new Track()
+	    };
+	  },
+	
+	  componentDidMount: function () {
+	    KeyStore.addListener(function () {
+	      this.state.track.addNotes(KeyStore.all());
+	    });
+	  },
+	
+	  handleClick: function (e) {
+	    e.stopPropagation();
+	    if (this.state.isRecording) {
+	      this.state.track.stopRecording();
+	    } else {
+	      this.state.track.startRecording();
+	    }
+	    this.setState({ isRecording: !this.state.isRecording });
+	  },
+	
+	  render: function () {
+	    console.log(this.state.isRecording);
+	
+	    var buttonText = this.state.isRecording ? "Stop" : "Start";
+	    return React.createElement(
+	      'section',
+	      null,
+	      React.createElement(
+	        'label',
+	        null,
+	        'Track Name:',
+	        React.createElement('input', { type: 'text',
+	          value: this.state.track.name,
+	          placeholder: 'track name here..' })
+	      ),
+	      React.createElement(
+	        'button',
+	        { onClick: this.handleClick },
+	        buttonText
+	      )
+	    );
+	  }
+	
+	});
+	
+	module.exports = Recorder;
+
+/***/ },
+/* 189 */
+/***/ function(module, exports, __webpack_require__) {
+
+	var KeyActions = __webpack_require__(9);
+	
+	var Track = function (attr) {
+	  if (attr) {
+	    this.name = attr.name;
+	    this.roll = attr.roll;
+	  }
+	};
+	
+	Track.prototype.startRecording = function () {
+	  this.roll = [];
+	  this.startTime = new Date();
+	};
+	
+	Track.prototype.addNotes = function (notes) {
+	  this.roll.push({
+	    timeSlice: new Date() - this.startTime,
+	    notes: notes
+	  });
+	};
+	
+	Track.prototype.stopRecording = function () {
+	  this.addNotes([]);
+	};
+	
+	Track.prototype.play = function () {
+	  if (this.interval) {
+	    return;
+	  }
+	  var playbackStartTime = new Date();
+	  var currentNote = 0;
+	
+	  this.interval = setInterval(function () {
+	    if (currentNote < this.roll.length) {
+	      if (new Date() - playbackStartTime === this.roll[currentNote].timeSlice) {
+	        this.roll[currentNote].notes.forEach(function (note) {
+	          KeyActions.keyUp(note);
+	        });
+	      } else if (new Date() - playbackStartTime > this.roll[currentNote].timeSlice) {
+	        this.roll[currentNote].notes.forEach(function (note) {
+	          KeyActions.keyPressed(note);
+	        });
+	        currentNote += 1;
+	      }
+	    }
+	  }, 100);
+	};
+	
+	module.exports = Track;
 
 /***/ }
 /******/ ]);

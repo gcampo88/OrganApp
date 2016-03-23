@@ -14,6 +14,7 @@ KeyStore.__onDispatch = function (payload) {
   switch (payload.actionType) {
     case NoteConstants.keyPressed:
       if (!_currentKeys.includes(payload.noteName)) {
+        // debugger;
         _currentKeys.push(payload.noteName);
         this.__emitChange();
       }

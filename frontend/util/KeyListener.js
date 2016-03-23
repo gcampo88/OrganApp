@@ -4,8 +4,8 @@ var KeyListener = {
 
   keydown: function () {
     $(document).keydown(function (event) {
-      var key = Mapping[event.which];
-      if (key === undefined) {
+      var key = Mapping[event.keyCode];
+      if (!key) {
         return;
       }
       KeyActions.keyPressed(key);
@@ -14,7 +14,7 @@ var KeyListener = {
 
   keyup: function () {
     $(document).keyup(function (event) {
-      var key = Mapping[event.which];
+      var key = Mapping[event.keyCode];
       if (key === undefined) {
         return;
       }
@@ -40,9 +40,18 @@ var Mapping = {
   52: "GSHARP",
   65: "A",
   53: "ASHARP",
-  66: "B",
+  66: "B"
 };
-
+//
+// var Mapping = {
+//   65: "A",
+//   83: "B",
+//   68: "C",
+//   70: "D",
+//   74: "E",
+//   75: "F"
+//
+// };
 
 
 module.exports = KeyListener;
